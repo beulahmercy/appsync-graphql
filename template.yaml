@@ -1,0 +1,113 @@
+Description: AWSAppSync DynamoDB Testing Sample
+
+Parameters:
+  environment:
+    Type: String
+    Default: dev
+  TABLENAME:
+    Type: String
+    Default: sample-test
+  AWSREGION:
+    Type: String
+    Default: us-west-2
+
+Resources:
+  TestTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: "id"
+            AttributeType: "S"
+          - AttributeName: "key"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "id"
+            KeyType: "HASH"
+          - AttributeName: "key"
+            KeyType: "RANGE"
+        ProvisionedThroughput:
+          ReadCapacityUnits: "1"
+          WriteCapacityUnits: "1"
+        TableName: !Ref TABLENAME
+  GraphQLApi:
+    Type: "AWS::AppSync::GraphQLApi"
+    Properties:
+      Name: AWSAppSync DynamoDB Sample
+      AuthenticationType: API_KEY
+  DynamoDBTableDataSource:
+    Type: "AWS::AppSync::DataSource"
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Name: DynamoDBTable
+      Description: The Employee DynamoDB table in us-west-2
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: "arn:aws:iam::XXXXXXXX:role/XXXXX-XXXXX-XXXX"
+      DynamoDBConfig:
+        AwsRegion: !Ref AWSREGION
+        TableName: !Ref TABLENAME
+
+  QueryGetEmployeesResolver:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: Schema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: getEmployees
+      DataSourceName: !GetAtt DynamoDBTableDataSource.Name
+      RequestMappingTemplateS3Location: "./templates/get-employees-req.vtl"
+      ResponseMappingTemplateS3Location: "./templates/get-employees-res.vtl"
+
+  QueryGetEmployeeResolver:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: Schema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: getEmployee
+      DataSourceName: !GetAtt DynamoDBTableDataSource.Name
+      RequestMappingTemplateS3Location: "./templates/get-employee-req.vtl"
+      ResponseMappingTemplateS3Location: "./templates/get-employee-res.vtl"
+
+  QueryGetDepartmentResolver:
+    Type: "AWS::AppSync::Resolver"
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Employee
+      FieldName: department
+      DataSourceName: !GetAtt DynamoDBTableDataSource.Name
+      RequestMappingTemplateS3Location: "./templates/get-department-req.vtl"
+      ResponseMappingTemplateS3Location: "./templates/get-department-res.vtl"
+  
+  QueryGetEmployeesByDepartmentResolver:
+    Type: "AWS::AppSync::Resolver"
+    DependsOn: Schema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: getEmployeesByDepartment
+      DataSourceName: !GetAtt DynamoDBTableDataSource.Name
+      RequestMappingTemplateS3Location: "./templates/get-employees-by-dept-req.vtl"
+      ResponseMappingTemplateS3Location: "./templates/get-employees-by-dept-res.vtl"
+
+  Schema:
+    Type: "AWS::AppSync::GraphQLSchema"
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DefinitionS3Location: "./graphql/schema/schema.graphql"
+
+Outputs:
+  GraphQLApiARN:
+    Description: The App ID of the GraphQL endpoint.
+    Value: !Ref GraphQLApi
+  GraphQLApiId:
+    Description: The App ID of the GraphQL endpoint.
+    Value: !GetAtt GraphQLApi.ApiId
+  GraphQLApiEndpoint:
+    Description: The URL for the GraphQL endpoint.
+    Value: !GetAtt GraphQLApi.GraphQLUrl
+  DynamoDBTableDataSourceARN:
+    Description: The ARN for the  DynamoDB table DataSource.
+    Value: !Ref DynamoDBTableDataSource
+  DynamoDBTableDataSourceName:
+    Description: The ARN for the  DynamoDB table DataSource.
+    Value: !GetAtt DynamoDBTableDataSource.Name

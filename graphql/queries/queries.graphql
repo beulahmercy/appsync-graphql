@@ -1,0 +1,43 @@
+query MyQuery {
+  getEmployee(employeeId: "8c08d1d9-0be6-43b9-9f09-aa926d4d7f0d") {
+    department {
+      id
+      key
+      name
+    }
+    id
+    key
+    name
+    dob
+  }
+}
+
+
+query MyQuery {
+  getEmployees {
+    department {
+      id
+      key
+      name
+    }
+    dob
+    id
+    key
+    name
+  }
+}
+
+
+query MyQuery {
+  getEmployeesByDepartment(departmentId: "347ae82d-c4a9-4b26-9231-af003b6a5d00") {
+    dob
+    id
+    key
+    name
+    department {
+      id
+      key
+      name
+    }
+  }
+}

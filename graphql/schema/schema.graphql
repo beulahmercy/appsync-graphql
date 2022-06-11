@@ -1,0 +1,23 @@
+type Department {
+	id: ID!
+	key: String!
+	name: String
+}
+
+type Employee {
+	id: ID!
+	key: String!
+	name: String
+	dob: String
+	department: Department
+}
+
+type Query {
+	getEmployee(employeeId: ID!): Employee
+	getEmployees: [Employee]
+	getEmployeesByDepartment(departmentId: ID!): [Employee]
+}
+
+schema {
+	query: Query
+}
